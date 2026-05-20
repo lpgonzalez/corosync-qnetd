@@ -1,0 +1,16 @@
+# Keep the build context small — only Dockerfile + entrypoint go into the image.
+configs/
+backups/
+*.tar
+*.tar.gz
+*.tar.bz2
+.git/
+.github/
+.gitignore
+.dockerignore
+.vscode/
+.idea/
+README.md
+LICENSE
+Makefile
+docker-compose.yml

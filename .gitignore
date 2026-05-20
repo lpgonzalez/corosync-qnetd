@@ -1,0 +1,29 @@
+# --- Secrets / runtime state (NEVER push to a public repo) -------------------
+# NSS DB contains the cluster certificate after `pvecm qdevice setup`
+configs/qnetd-nssdb/*
+!configs/qnetd-nssdb/.gitkeep
+
+# SSH host keys are unique per deployment
+configs/ssh-host-keys/*
+!configs/ssh-host-keys/.gitkeep
+
+# Real authorized_keys contains operator pubkeys
+configs/ssh-authorized-keys/authorized_keys
+configs/ssh-authorized-keys/known_hosts
+
+# Backups
+backups/*
+!backups/.gitkeep
+
+# --- Build artifacts ---------------------------------------------------------
+*.tar
+*.tar.gz
+*.tar.bz2
+
+# --- IDE / OS ----------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*~

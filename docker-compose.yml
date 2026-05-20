@@ -1,0 +1,70 @@
+# ------------------------------------------------------------------------------
+# corosync-qnetd  -  QDevice arbitro para cluster Proxmox de 2 nodos
+#
+# Despliegue en Container Station (QNAP):
+#   1) Subir el directorio completo a /share/Container/corosync-qnetd/.
+#   2) Antes del primer arranque, pegar las pubkeys SSH de root de cada nodo
+#      PVE en:
+#         configs/ssh-authorized-keys/authorized_keys
+#      (los nodos PVE las generan automaticamente; en cada nodo:
+#       cat /root/.ssh/id_rsa.pub  -  si no existe, ssh-keygen -t rsa -b 4096).
+#      NOTA: las claves que los nodos PVE intercambian al unirse al cluster son
+#      ENTRE NODOS, no incluyen al qnetd. Hay que poblar este authorized_keys
+#      a mano una vez.
+#   3) CONSTRUIR LA IMAGEN ANTES de crear la Application. Container Station
+#      del TS-1263U-RP no construye Dockerfiles desde la UI de forma fiable
+#      (mete el YAML en /tmp sin el resto de archivos => "open Dockerfile:
+#      no such file or directory"). Dos opciones:
+#
+#      Opcion A (recomendada, build directo en el NAS por SSH puerto 7000):
+#         ssh -p 7000 admin@<NAS-IP>          # luego 'sudo -i' si hace falta
+#         cd /share/Container/corosync-qnetd
+#         docker build -t corosync-qnetd:local .
+#
+#      Opcion B (build local en Windows + import en el NAS):
+#         make all   (ver Makefile adjunto; requiere Docker Desktop y scp)
+#
+#   4) Crear Application apuntando a este compose. Container Station usa la
+#      imagen 'corosync-qnetd:local' que cargaste en el paso 3 y NO intenta
+#      pull ni build.
+#   5) En cada nodo PVE:
+#         apt install corosync-qdevice
+#         pvecm qdevice setup <IP_DEL_NAS>          # p.ej. 10.0.10.3
+#      Verificar con:  pvecm status   (Qdevice 1 voto, Expected votes: 3)
+#
+# Red:
+#   - El contenedor usa la red 'bridge' por defecto y publica sus puertos en
+#     la IP del NAS via port mapping. Aprovechamos que el SSH del NAS QTS vive
+#     en el puerto 7000, asi que el 22 esta libre para el contenedor.
+#   - 'pvecm qdevice setup' habla con <IP_NAS>:22 (SSH del contenedor) y con
+#     <IP_NAS>:5403 (qnetd). No requiere macvlan ni configuracion de red en QTS.
+#   - Si el NAS tiene varias NICs/IPs y solo quieres exponer el qnetd en una
+#     concreta, sustituye p.ej. "22:22/tcp" por "10.0.10.3:22:22/tcp".
+# ------------------------------------------------------------------------------
+
+services:
+  corosync-qnetd:
+    image: corosync-qnetd:local
+    container_name: corosync-qnetd
+    restart: unless-stopped
+
+    ports:
+      - "5403:5403/tcp"      # qnetd (de los nodos PVE al arbitro)
+      - "22:22/tcp"          # SSH del contenedor (NAS QTS escucha en 7000, este libre)
+
+    volumes:
+      # NSS DB del qnetd: aqui aterriza el cert del cluster generado por
+      # 'pvecm qdevice setup'. UNICO volumen realmente imprescindible.
+      - ./configs/qnetd-nssdb:/etc/corosync/qnetd/nssdb
+
+      # Host keys SSH persistentes (evita "host key changed" en rebuilds)
+      - ./configs/ssh-host-keys:/etc/ssh/keys
+
+      # authorized_keys de root (pubkeys de los nodos PVE)
+      - ./configs/ssh-authorized-keys:/root/.ssh
+
+    healthcheck:
+      test: ["CMD-SHELL", "ss -ltn | grep -q ':5403' && ss -ltn | grep -q ':22'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
