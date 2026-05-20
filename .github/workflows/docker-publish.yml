@@ -6,6 +6,10 @@ on:
       - 'v*.*.*'         # e.g. v1.0.0  -> publishes 1.0.0, 1.0, 1, latest
     branches:
       - main             # publishes 'edge' tag on every push to main
+  schedule:
+    - cron: '0 4 * * 1'  # Every Monday 04:00 UTC: rebuild to absorb upstream
+                         # Debian security updates without code changes.
+                         # Refreshes the 'main' and 'edge' tags only.
   workflow_dispatch:     # allow manual runs
 
 env:
@@ -73,5 +77,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
-          short-description: "Lightweight corosync-qnetd QDevice arbitrator for 2-node Proxmox VE clusters. Adds the missing third quorum vote so HA failover works. Pubkey-only SSH for `pvecm qdevice setup`. Multi-arch (amd64/arm64), ~120 MB."
+          short-description: "External QDevice arbitrator (corosync-qnetd) for 2-node Proxmox VE clusters."
           readme-filepath: ./README.md

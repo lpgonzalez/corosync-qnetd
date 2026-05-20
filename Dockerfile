@@ -28,7 +28,15 @@ LABEL org.opencontainers.image.title="corosync-qnetd" \
       org.opencontainers.image.base.name="docker.io/library/debian:bookworm-slim"
 
 # --- Install runtime packages -------------------------------------------------
+# 1. apt-get upgrade BEFORE install: applies every security update available
+#    in the Debian point-release at build time. This is what cuts the bulk
+#    of "high/critical" CVEs reported by Docker Scout — they are almost
+#    always upstream-fixed packages that the base image snapshot hasn't
+#    picked up yet.
+# 2. Combined into a single RUN to keep the layer small.
+# 3. Trim docs/man pages on cleanup to shave a few MB.
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         corosync-qnetd \
         openssh-server \
@@ -36,7 +44,11 @@ RUN apt-get update && \
         iproute2 \
         procps && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* \
+           /var/cache/apt/archives/*.deb \
+           /usr/share/doc/* \
+           /usr/share/man/* \
+           /usr/share/info/*
 
 # --- sshd hardening ----------------------------------------------------------
 #   - HostKey from persistent volume /etc/ssh/keys (survives rebuilds)
