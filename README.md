@@ -4,7 +4,7 @@ A lightweight Docker image that provides a **Corosync QDevice arbitrator**
 (`corosync-qnetd`) — the external tie-breaker vote that turns a 2-node Proxmox
 VE cluster into a real High-Availability setup.
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/lpgonzalez/corosync-qnetd.svg)](https://hub.docker.com/r/lpgonzalez/corosync-qnetd)
+[![Docker Pulls](https://img.shields.io/docker/pulls/lpgonzalez/corosync-qnetd)](https://hub.docker.com/r/lpgonzalez/corosync-qnetd)
 [![Image Size](https://img.shields.io/docker/image-size/lpgonzalez/corosync-qnetd/latest)](https://hub.docker.com/r/lpgonzalez/corosync-qnetd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
