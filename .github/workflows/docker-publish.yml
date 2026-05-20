@@ -4,8 +4,9 @@ on:
   push:
     tags:
       - 'v*.*.*'         # e.g. v1.0.0  -> publishes 1.0.0, 1.0, 1, latest
-  workflow_dispatch:     # allow manual runs (Actions UI). Re-publishes the
-                         # tags computed from the currently checked-out ref.
+  workflow_dispatch:     # allow manual runs (from Actions UI). When triggered
+                         # without a SemVer tag, only the README sync runs;
+                         # the image build job is skipped on purpose.
 
 env:
   IMAGE_NAME: corosync-qnetd
@@ -13,7 +14,12 @@ env:
   PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
-  build-and-push:
+  # ---------------------------------------------------------------------------
+  # Job 1: build and publish the multi-arch image.
+  # Only runs when a git tag matching v*.*.* is pushed; skipped otherwise.
+  # ---------------------------------------------------------------------------
+  publish-image:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,7 +35,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -44,14 +49,14 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=raw,value=latest
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: ${{ env.PLATFORMS }}
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -61,13 +66,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Sync README.md to the Docker Hub "Overview" page.
-      # Runs on main pushes and on tag releases. Skipped on PRs.
-      # Requires DOCKERHUB_TOKEN with "Read, Write, Delete" scope (or the new
-      # granular permission "Modify repository details"). 403 Forbidden here
-      # means the token scope is insufficient — regenerate it on hub.docker.com.
+  # ---------------------------------------------------------------------------
+  # Job 2: sync README.md to the Docker Hub "Overview" page.
+  # Runs on tag releases AND on workflow_dispatch — that way you can refresh
+  # the Overview after doc-only edits without bumping a SemVer version.
+  # Requires DOCKERHUB_TOKEN with "Read, Write, Delete" scope (or the new
+  # granular "Modify repository details" permission).
+  # ---------------------------------------------------------------------------
+  sync-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Update Docker Hub description
-        if: github.event_name != 'pull_request'
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
