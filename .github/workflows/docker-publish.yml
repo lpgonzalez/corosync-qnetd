@@ -70,6 +70,9 @@ jobs:
 
       # Sync README.md to the Docker Hub "Overview" page.
       # Runs on main pushes and on tag releases. Skipped on PRs.
+      # Requires DOCKERHUB_TOKEN with "Read, Write, Delete" scope (or the new
+      # granular permission "Modify repository details"). 403 Forbidden here
+      # means the token scope is insufficient — regenerate it on hub.docker.com.
       - name: Update Docker Hub description
         if: github.event_name != 'pull_request'
         uses: peter-evans/dockerhub-description@v4
