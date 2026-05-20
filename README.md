@@ -63,7 +63,7 @@ Synology, TrueNAS, Raspberry Pi…) and let the NAS be your arbitrator.
 
 ```
    ┌──────────────┐                       ┌──────────────┐
-   │   pve01      │◄──── corosync ──────►│   pve02      │
+   │   pve01      │◄───── corosync ──────►│   pve02      │
    │  (1 vote)    │                       │  (1 vote)    │
    └──────┬───────┘                       └───────┬──────┘
           │                                       │
