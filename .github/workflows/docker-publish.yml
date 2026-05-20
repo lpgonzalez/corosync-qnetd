@@ -12,6 +12,11 @@ env:
   IMAGE_NAME: corosync-qnetd
   REGISTRY: docker.io
   PLATFORMS: linux/amd64,linux/arm64
+  # Opt-in to Node.js 24 for JS-based actions. GitHub will default to it
+  # from 2026-06-02; this silences the deprecation warning today without
+  # having to bump every individual action version. Remove this once the
+  # runner default migration is complete.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   # ---------------------------------------------------------------------------
