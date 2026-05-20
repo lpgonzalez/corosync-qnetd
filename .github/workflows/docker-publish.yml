@@ -63,3 +63,15 @@ jobs:
             BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Sync README.md to the Docker Hub "Overview" page.
+      # Runs on main pushes and on tag releases. Skipped on PRs.
+      - name: Update Docker Hub description
+        if: github.event_name != 'pull_request'
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          short-description: "Lightweight corosync-qnetd QDevice arbitrator for 2-node Proxmox VE clusters. Adds the missing third quorum vote so HA failover works. Pubkey-only SSH for `pvecm qdevice setup`. Multi-arch (amd64/arm64), ~120 MB."
+          readme-filepath: ./README.md
