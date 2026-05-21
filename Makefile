@@ -29,7 +29,7 @@
 ##################################################
 
 image-name      = corosync-qnetd
-image-version   = 1.0.0
+image-version   = 1.1.0
 
 # --- Public registry (Docker Hub) ---
 # Replace with your Docker Hub username before running 'release'.

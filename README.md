@@ -95,7 +95,7 @@ Quorum math with this image deployed:
 
 ## Features
 
-- Minimal image (`debian:bookworm-slim` + `corosync-qnetd` + `openssh-server`),
+- Minimal image (`debian:13-slim` + `corosync-qnetd` + `openssh-server`),
   around **120 MB**.
 - **SSH server included** so `pvecm qdevice setup <ip>` works out of the box
   — Proxmox uses SSH on port 22 (hard-coded) to install the NSS cert.
@@ -552,7 +552,7 @@ when idle.
 - The [Cluster Labs](https://clusterlabs.org/) team for `corosync-qnetd`.
 - The [Proxmox VE](https://www.proxmox.com/proxmox-ve) project for making
   HA accessible to small infrastructures.
-- The Debian project for `bookworm-slim`.
+- The Debian project for `13-slim` (trixie).
 
 ---
 
